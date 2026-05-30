@@ -10,7 +10,7 @@
 -- One row per (decade, flat_age_bucket, flat_type) combination.
 
 select
-    transaction_decade,
+    cast(transaction_decade as string)                         as transaction_decade,
     flat_age_bucket,
     flat_type,
 
