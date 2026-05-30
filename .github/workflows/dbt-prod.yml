@@ -1,0 +1,48 @@
+name: dbt prod
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "dbt/**"
+  workflow_dispatch:
+
+jobs:
+  dbt-prod:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write   # required for Workload Identity Federation
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Authenticate to GCP via Workload Identity Federation
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+
+      - name: Install dbt-bigquery
+        run: pip install dbt-core==1.11.11 dbt-bigquery==1.8.2
+
+      - name: Set up dbt profile
+        run: |
+          mkdir -p ~/.dbt
+          cp dbt/profiles.yml.template ~/.dbt/profiles.yml
+
+      - name: dbt deps
+        working-directory: dbt
+        run: dbt deps
+
+      - name: dbt run (prod)
+        working-directory: dbt
+        run: dbt run --target prod
+
+      - name: dbt test (prod)
+        working-directory: dbt
+        run: dbt test --target prod

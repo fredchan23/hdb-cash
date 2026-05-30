@@ -76,10 +76,57 @@ gcloud projects add-iam-policy-binding "${PROJECT_ID}" \
   --member="serviceAccount:${SA_BI}" \
   --role="roles/bigquery.dataViewer" --condition=None
 
+# -------------------------------------------------------------------
+# Workload Identity Federation (GitHub Actions CI/CD)
+# -------------------------------------------------------------------
+GITHUB_REPO="fredchan23/hdb-cash"
+WIF_POOL="github-actions-pool"
+WIF_PROVIDER="github-actions-provider"
+
+PROJECT_NUMBER=$(gcloud projects describe "${PROJECT_ID}" --format="value(projectNumber)")
+
+if gcloud iam workload-identity-pools describe "${WIF_POOL}" \
+     --project="${PROJECT_ID}" --location=global &>/dev/null; then
+  echo "  [exists] WIF pool: ${WIF_POOL}"
+else
+  gcloud iam workload-identity-pools create "${WIF_POOL}" \
+    --project="${PROJECT_ID}" \
+    --location=global \
+    --display-name="GitHub Actions Pool"
+  echo "  [created] WIF pool: ${WIF_POOL}"
+fi
+
+if gcloud iam workload-identity-pools providers describe "${WIF_PROVIDER}" \
+     --project="${PROJECT_ID}" --location=global \
+     --workload-identity-pool="${WIF_POOL}" &>/dev/null; then
+  echo "  [exists] WIF provider: ${WIF_PROVIDER}"
+else
+  gcloud iam workload-identity-pools providers create-oidc "${WIF_PROVIDER}" \
+    --project="${PROJECT_ID}" \
+    --location=global \
+    --workload-identity-pool="${WIF_POOL}" \
+    --display-name="GitHub Actions OIDC Provider" \
+    --issuer-uri="https://token.actions.githubusercontent.com" \
+    --attribute-mapping="google.subject=assertion.sub,attribute.repository=assertion.repository,attribute.actor=assertion.actor" \
+    --attribute-condition="attribute.repository=='${GITHUB_REPO}'"
+  echo "  [created] WIF provider: ${WIF_PROVIDER}"
+fi
+
+WIF_MEMBER="principalSet://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${WIF_POOL}/attribute.repository/${GITHUB_REPO}"
+gcloud iam service-accounts add-iam-policy-binding "${SA_TRANSFORM}" \
+  --project="${PROJECT_ID}" \
+  --role="roles/iam.workloadIdentityUser" \
+  --member="${WIF_MEMBER}"
+echo "  [bound] WIF → ${SA_TRANSFORM}"
+
 echo ""
 echo "=== GCP setup complete ==="
 echo ""
-echo "Next steps:"
-echo "  1. Download key for dbt-transform SA and set DBT_GOOGLE_KEYFILE env var."
-echo "  2. Copy dbt/profiles.yml.template to ~/.dbt/profiles.yml and fill in key path."
+echo "Add these secrets to your GitHub repo (Settings → Secrets → Actions):"
+echo "  WIF_PROVIDER        = projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${WIF_POOL}/providers/${WIF_PROVIDER}"
+echo "  WIF_SERVICE_ACCOUNT = ${SA_TRANSFORM}"
+echo ""
+echo "Local dev setup:"
+echo "  1. Copy dbt/profiles.yml.template to ~/.dbt/profiles.yml"
+echo "  2. Run: gcloud auth application-default login"
 echo "  3. Run: cd dbt && dbt deps && dbt debug"
