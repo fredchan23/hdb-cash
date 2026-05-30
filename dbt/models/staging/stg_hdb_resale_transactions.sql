@@ -54,10 +54,9 @@ cleaned as (
         -- ----------------------------------------------------------------
         parse_date('%Y-%m', month)                             as transaction_month,
         extract(year  from parse_date('%Y-%m', month))         as transaction_year,
-        cast(
-          extract(year from parse_date('%Y-%m', month)) / 10 * 10
-          as int64
-        )                                                      as transaction_decade,
+        div(
+          extract(year from parse_date('%Y-%m', month)), 10
+        ) * 10                                                 as transaction_decade,
 
         -- ----------------------------------------------------------------
         -- Location (normalised to UPPER CASE)
