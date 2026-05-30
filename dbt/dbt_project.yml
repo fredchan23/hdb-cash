@@ -1,0 +1,30 @@
+name: hdb_cash
+version: '1.0.0'
+config-version: 2
+
+profile: hdb_cash
+
+model-paths: ["models"]
+macro-paths: ["macros"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+analysis-paths: ["analyses"]
+snapshot-paths: ["snapshots"]
+
+clean-targets:
+  - target
+  - dbt_packages
+
+models:
+  hdb_cash:
+    staging:
+      +schema: staging
+      +materialized: incremental
+      +on_schema_change: sync_all_columns
+    mart:
+      +schema: mart
+      +materialized: table
+
+vars:
+  project_id: "hdb-cash"
+  bq_location: "asia-southeast1"

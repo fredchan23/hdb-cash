@@ -1,0 +1,86 @@
+version: 2
+
+models:
+  - name: stg_hdb_resale_transactions
+    description: >
+      Cleaned and enriched HDB resale transactions.
+      Harmonises schema across all five source CSV files, parses lease fields,
+      computes flat_age_years and related features.
+    columns:
+      - name: transaction_id
+        description: MD5 surrogate key derived from natural key fields.
+        tests:
+          - unique
+          - not_null
+
+      - name: transaction_month
+        description: First day of the transaction month (DATE).
+        tests:
+          - not_null
+
+      - name: transaction_year
+        tests:
+          - not_null
+
+      - name: transaction_decade
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 1990
+              max_value: 2029
+              inclusive: true
+
+      - name: town
+        tests:
+          - not_null
+
+      - name: flat_type
+        tests:
+          - not_null
+          - accepted_values:
+              values:
+                - "1 ROOM"
+                - "2 ROOM"
+                - "3 ROOM"
+                - "4 ROOM"
+                - "5 ROOM"
+                - "EXECUTIVE"
+                - "MULTI-GENERATION"
+                - "MULTI GENERATION"
+
+      - name: floor_area_sqm
+        tests:
+          - not_null
+
+      - name: lease_commence_date
+        tests:
+          - not_null
+
+      - name: flat_age_years
+        description: Years since lease commencement at time of transaction.
+        tests:
+          - not_null
+
+      - name: flat_age_bucket
+        tests:
+          - not_null
+          - accepted_values:
+              values: ["00-09", "10-19", "20-29", "30-39", "40-49", "50-59", "60+"]
+
+      - name: resale_price
+        tests:
+          - not_null
+
+      - name: log_resale_price
+        tests:
+          - not_null
+
+      - name: source_basis
+        tests:
+          - accepted_values:
+              values: ["approval", "registration"]
+
+      - name: remaining_lease_source
+        tests:
+          - accepted_values:
+              values: ["reported", "estimated"]

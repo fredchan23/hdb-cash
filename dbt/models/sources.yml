@@ -1,0 +1,53 @@
+version: 2
+
+sources:
+  - name: raw
+    database: hdb-cash
+    schema: raw
+    description: >
+      Raw HDB resale transaction records loaded from CSV releases issued by
+      the Housing & Development Board via data.gov.sg.
+    loaded_at_field: loaded_at
+    freshness:
+      warn_after: {count: 400, period: day}   # authority releases are ~quarterly
+      error_after: {count: 730, period: day}  # alert if no load in 2 years
+
+    tables:
+      - name: hdb_resale_transactions
+        description: >
+          Single merged table covering all resale transactions from 1990 to
+          present. Rows are appended on each authority release. Schema
+          harmonisation (remaining_lease, source_basis) is handled in the
+          staging layer.
+        columns:
+          - name: month
+            description: Transaction month in YYYY-MM string format.
+          - name: town
+            description: Planning area / town name.
+          - name: flat_type
+            description: "Flat type e.g. 3 ROOM, 4 ROOM, EXECUTIVE."
+          - name: block
+            description: Block number as a string.
+          - name: street_name
+            description: Street name.
+          - name: storey_range
+            description: "Storey range text e.g. '10 TO 12'."
+          - name: floor_area_sqm
+            description: Floor area in square metres.
+          - name: flat_model
+            description: "Flat model e.g. Improved, New Generation, DBSS."
+          - name: lease_commence_date
+            description: Year in which the flat's 99-year lease started.
+          - name: remaining_lease
+            description: >
+              Remaining lease at time of transaction. NULL for pre-2015 records.
+              Format differs by period: plain integer years (2015-2016) or
+              text "N years M months" (2017 onwards).
+          - name: resale_price
+            description: Transacted resale price in Singapore dollars.
+          - name: source_file
+            description: Original CSV filename the record was loaded from.
+          - name: source_basis
+            description: "'approval' for pre-2012 files, 'registration' for 2012+."
+          - name: loaded_at
+            description: UTC timestamp when the record was ingested into BigQuery.

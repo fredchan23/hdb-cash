@@ -1,0 +1,39 @@
+version: 2
+
+models:
+  - name: mart_age_price_decade_summary
+    description: >
+      Pre-aggregated summary of resale prices by decade, flat age bucket, and
+      flat type. Primary table consumed by the analytics dashboard.
+    columns:
+      - name: transaction_decade
+        tests: [not_null]
+      - name: flat_age_bucket
+        tests: [not_null]
+      - name: flat_type
+        tests: [not_null]
+      - name: transaction_count
+        tests: [not_null]
+      - name: median_resale_price
+        tests: [not_null]
+      - name: avg_resale_price
+        tests: [not_null]
+
+  - name: mart_age_price_regression_inputs
+    description: >
+      Transaction-level mart with all engineered features needed for OLS and
+      other statistical models analysing flat age impact on resale price.
+      Includes quadratic age term, storey midpoint, and log price.
+    columns:
+      - name: transaction_id
+        tests:
+          - unique
+          - not_null
+      - name: transaction_month
+        tests: [not_null]
+      - name: flat_age_years
+        tests: [not_null]
+      - name: resale_price
+        tests: [not_null]
+      - name: log_resale_price
+        tests: [not_null]

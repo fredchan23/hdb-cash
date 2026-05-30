@@ -1,0 +1,28 @@
+# profiles.yml.template
+# Copy this to ~/.dbt/profiles.yml and fill in your keyfile path.
+# Do NOT commit the actual profiles.yml — it contains secret paths.
+
+hdb_cash:
+  target: dev
+  outputs:
+
+    dev:
+      type: bigquery
+      method: oauth                 # uses Application Default Credentials (gcloud auth application-default login)
+      project: hdb-cash
+      dataset: staging_dev          # writes to a dev-only dataset
+      location: asia-southeast1
+      timeout_seconds: 300
+      retries: 1
+      threads: 4
+
+    prod:
+      type: bigquery
+      method: service-account
+      project: hdb-cash
+      dataset: staging              # writes to production staging dataset
+      location: asia-southeast1
+      keyfile: "{{ env_var('DBT_GOOGLE_KEYFILE') }}"
+      timeout_seconds: 300
+      retries: 1
+      threads: 8

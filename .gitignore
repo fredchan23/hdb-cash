@@ -1,0 +1,28 @@
+# --- dbt ---
+dbt/profiles.yml           # contains keyfile paths — never commit
+dbt/target/
+dbt/dbt_packages/
+dbt/logs/
+
+# --- GCP credentials ---
+*.json
+.env
+.env.*
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+
+# --- Data files (keep data-raw/ in repo for bootstrap; exclude large outputs) ---
+data-processed/
+*.parquet
+
+# --- OS ---
+.DS_Store
+Thumbs.db
+data-raw/*.csv
