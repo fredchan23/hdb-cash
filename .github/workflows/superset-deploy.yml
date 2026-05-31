@@ -1,0 +1,88 @@
+name: Superset deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "infra/superset/**"
+      - "superset/**"
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write   # required for Workload Identity Federation
+
+    env:
+      PROJECT_ID: hdb-cash
+      REGION: asia-southeast1
+      SERVICE_NAME: hdb-cash-superset
+      AR_HOST: asia-southeast1-docker.pkg.dev
+      AR_REPO: superset
+      CLOUDSQL_INSTANCE: hdb-cash:asia-southeast1:hdb-cash-superset-db
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate to GCP via Workload Identity Federation
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.AR_HOST }} --quiet
+
+      - name: Set image tag
+        id: tag
+        run: echo "tag=${GITHUB_SHA::8}" >> "$GITHUB_OUTPUT"
+
+      - name: Build Docker image
+        run: |
+          docker build \
+            -f infra/superset/Dockerfile \
+            -t ${{ env.AR_HOST }}/${{ env.PROJECT_ID }}/${{ env.AR_REPO }}/superset:${{ steps.tag.outputs.tag }} \
+            .
+
+      - name: Push Docker image
+        run: |
+          docker push \
+            ${{ env.AR_HOST }}/${{ env.PROJECT_ID }}/${{ env.AR_REPO }}/superset:${{ steps.tag.outputs.tag }}
+
+      - name: Fetch DB password from Secret Manager
+        id: dbpass
+        run: |
+          pw=$(gcloud secrets versions access latest \
+            --secret=superset-db-password \
+            --project=${{ env.PROJECT_ID }})
+          echo "::add-mask::${pw}"
+          echo "db_url=postgresql+pg8000://superset:${pw}@/superset?unix_sock=/cloudsql/${{ env.CLOUDSQL_INSTANCE }}/.s.PGSQL.5432" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy ${{ env.SERVICE_NAME }} \
+            --project=${{ env.PROJECT_ID }} \
+            --region=${{ env.REGION }} \
+            --image=${{ env.AR_HOST }}/${{ env.PROJECT_ID }}/${{ env.AR_REPO }}/superset:${{ steps.tag.outputs.tag }} \
+            --service-account=superset-runner@${{ env.PROJECT_ID }}.iam.gserviceaccount.com \
+            --add-cloudsql-instances=${{ env.CLOUDSQL_INSTANCE }} \
+            --set-secrets="SUPERSET_SECRET_KEY=superset-secret-key:latest,GOOGLE_CLIENT_ID=google-oauth-client-id:latest,GOOGLE_CLIENT_SECRET=google-oauth-client-secret:latest,SUPERSET_ADMIN_PASSWORD=superset-admin-password:latest" \
+            --set-env-vars="SUPERSET_DATABASE_URL=${{ steps.dbpass.outputs.db_url }},SUPERSET_ADMIN_USERNAME=admin,SUPERSET_ADMIN_EMAIL=admin@hdb-cash.local,SESSION_COOKIE_SECURE=true" \
+            --min-instances=0 \
+            --max-instances=4 \
+            --cpu=2 \
+            --memory=2Gi \
+            --timeout=300 \
+            --no-allow-unauthenticated
+
+      - name: Print service URL
+        run: |
+          gcloud run services describe ${{ env.SERVICE_NAME }} \
+            --project=${{ env.PROJECT_ID }} \
+            --region=${{ env.REGION }} \
+            --format="value(status.url)"

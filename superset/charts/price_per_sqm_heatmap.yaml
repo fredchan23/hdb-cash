@@ -1,0 +1,45 @@
+version: 1.0.0
+slice_name: Median Price per sqm Heatmap
+viz_type: pivot_table_v2
+description: Pivot table showing median price per sqm with conditional heatmap colouring.
+  Rows = decade, columns = flat age bucket.
+cache_timeout: null
+uuid: e5f6a7b8-c9d0-1e2f-3a4b-c5d6e7f8a9b0
+dataset_uuid: a1b2c3d4-e5f6-7a8b-9c0d-e1f2a3b4c5d6
+certified_by: null
+certification_details: null
+is_managed_externally: false
+params:
+  adhoc_filters: []
+  aggregateFunction: Average
+  colSubTotals: false
+  colTotals: false
+  color_scheme: supersetColors
+  combineMetric: false
+  conditional_formatting:
+  - colorScheme: blue_white_yellow
+    column: Average of median_price_per_sqm
+    operator: none
+    targetValue: null
+    targetValueLeft: null
+    targetValueRight: null
+  groupbyColumns:
+  - flat_age_bucket
+  groupbyRows:
+  - transaction_decade
+  metrics:
+  - aggregate: AVG
+    column:
+      column_name: median_price_per_sqm
+      type: DOUBLE PRECISION
+    expressionType: SIMPLE
+    hasCustomLabel: true
+    label: Median Price / sqm
+  rowSubTotals: false
+  rowTotals: false
+  show_legend: false
+  time_range: No filter
+  transposePivot: false
+  valueFormat: ',.0f'
+  viz_type: pivot_table_v2
+query_context: ''

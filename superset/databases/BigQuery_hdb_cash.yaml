@@ -1,0 +1,16 @@
+version: 1.0.0
+database_name: hdb-cash BigQuery
+sqlalchemy_uri: bigquery://hdb-cash
+cache_timeout: null
+expose_in_sqllab: true
+allow_run_async: true
+allow_ctas: false
+allow_cvas: false
+allow_dml: false
+allow_csv_upload: false
+extra:
+  engine_params: {}
+  metadata_params: {}
+  allows_virtual_table_explore: true
+uuid: e2d7a8f1-3c4b-4d9e-a1b2-c3d4e5f6a7b8
+is_managed_externally: false

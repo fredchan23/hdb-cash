@@ -1,0 +1,48 @@
+version: 1.0.0
+slice_name: Avg Resale Price by Flat Age Bucket
+viz_type: echarts_bar
+description: Average resale price per flat age bracket, broken down by flat type.
+cache_timeout: null
+uuid: d4e5f6a7-b8c9-0d1e-2f3a-b4c5d6e7f8a9
+dataset_uuid: a1b2c3d4-e5f6-7a8b-9c0d-e1f2a3b4c5d6
+certified_by: null
+certification_details: null
+is_managed_externally: false
+params:
+  adhoc_filters: []
+  bar_stacked: false
+  bottom_margin: auto
+  color_scheme: supersetColors
+  groupby:
+  - flat_type
+  legendMargin: null
+  legendOrientation: top
+  legendType: scroll
+  metrics:
+  - aggregate: AVG
+    column:
+      column_name: avg_resale_price
+      type: DOUBLE PRECISION
+    expressionType: SIMPLE
+    hasCustomLabel: true
+    label: Avg Resale Price
+  order_bars: false
+  orderDesc: true
+  orientation: vertical
+  rich_tooltip: true
+  row_limit: 10000
+  show_bar_value: false
+  show_legend: true
+  time_range: No filter
+  viz_type: echarts_bar
+  x_axis: flat_age_bucket
+  x_axis_label: Flat Age Bucket
+  x_axis_title_margin: 15
+  x_ticks_layout: auto
+  y_axis_bounds:
+  - null
+  - null
+  y_axis_format: SMART_NUMBER
+  y_axis_label: Avg Resale Price (SGD)
+  y_axis_title_margin: 15
+query_context: ''

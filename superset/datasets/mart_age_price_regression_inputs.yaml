@@ -1,0 +1,181 @@
+version: 1.0.0
+table_name: mart_age_price_regression_inputs
+schema: staging_dev_mart
+description: >-
+  Transaction-level mart with engineered features. Use for scatter plots and
+  detailed drill-downs. Apply a decade or town filter to keep queries fast.
+main_dttm_col: transaction_month
+offset: 0
+default_endpoint: null
+cache_timeout: null
+template_params: null
+filter_select_enabled: true
+fetch_values_predicate: null
+extra: '{}'
+uuid: b2c3d4e5-f6a7-8b9c-0d1e-f2a3b4c5d6e7
+database_uuid: e2d7a8f1-3c4b-4d9e-a1b2-c3d4e5f6a7b8
+is_managed_externally: false
+
+columns:
+- column_name: transaction_id
+  type: STRING
+  verbose_name: Transaction ID
+  description: Surrogate key (unique)
+  is_dttm: false
+  is_active: true
+  groupby: false
+  filterable: false
+  expression: ''
+  python_date_format: null
+
+- column_name: transaction_month
+  type: DATE
+  verbose_name: Transaction Month
+  description: Monthly partition key
+  is_dttm: true
+  is_active: true
+  groupby: true
+  filterable: true
+  expression: ''
+  python_date_format: null
+
+- column_name: transaction_decade
+  type: INT64
+  verbose_name: Decade
+  description: e.g. 1990, 2000, 2010, 2020
+  is_dttm: false
+  is_active: true
+  groupby: true
+  filterable: true
+  expression: ''
+  python_date_format: null
+
+- column_name: town
+  type: STRING
+  verbose_name: Town
+  description: HDB town (upper case)
+  is_dttm: false
+  is_active: true
+  groupby: true
+  filterable: true
+  expression: ''
+  python_date_format: null
+
+- column_name: flat_type
+  type: STRING
+  verbose_name: Flat Type
+  is_dttm: false
+  is_active: true
+  groupby: true
+  filterable: true
+  expression: ''
+  python_date_format: null
+
+- column_name: flat_age_years
+  type: FLOAT64
+  verbose_name: Flat Age (years)
+  description: Age of flat at transaction date
+  is_dttm: false
+  is_active: true
+  groupby: false
+  filterable: true
+  expression: ''
+  python_date_format: null
+
+- column_name: flat_age_years_sq
+  type: FLOAT64
+  verbose_name: Flat Age Squared
+  description: Squared age for quadratic OLS term
+  is_dttm: false
+  is_active: true
+  groupby: false
+  filterable: false
+  expression: ''
+  python_date_format: null
+
+- column_name: flat_age_bucket
+  type: STRING
+  verbose_name: Flat Age Bucket
+  is_dttm: false
+  is_active: true
+  groupby: true
+  filterable: true
+  expression: ''
+  python_date_format: null
+
+- column_name: storey_midpoint
+  type: FLOAT64
+  verbose_name: Storey Midpoint
+  description: (storey_low + storey_high) / 2
+  is_dttm: false
+  is_active: true
+  groupby: false
+  filterable: false
+  expression: ''
+  python_date_format: null
+
+- column_name: remaining_lease_months
+  type: FLOAT64
+  verbose_name: Remaining Lease (months)
+  is_dttm: false
+  is_active: true
+  groupby: false
+  filterable: false
+  expression: ''
+  python_date_format: null
+
+- column_name: resale_price
+  type: FLOAT64
+  verbose_name: Resale Price (SGD)
+  is_dttm: false
+  is_active: true
+  groupby: false
+  filterable: false
+  expression: ''
+  python_date_format: null
+
+- column_name: log_resale_price
+  type: FLOAT64
+  verbose_name: Log Resale Price
+  description: Natural log of price
+  is_dttm: false
+  is_active: true
+  groupby: false
+  filterable: false
+  expression: ''
+  python_date_format: null
+
+- column_name: resale_price_per_sqm
+  type: FLOAT64
+  verbose_name: Resale Price per sqm (SGD)
+  is_dttm: false
+  is_active: true
+  groupby: false
+  filterable: false
+  expression: ''
+  python_date_format: null
+
+metrics:
+- metric_name: count
+  verbose_name: COUNT(*)
+  metric_type: count
+  expression: COUNT(*)
+  description: Row count
+  d3format: ',d'
+  warning_text: null
+
+- metric_name: avg__resale_price
+  verbose_name: AVG(resale_price)
+  metric_type: avg
+  expression: AVG(resale_price)
+  description: Average resale price
+  d3format: ',.0f'
+  warning_text: null
+
+- metric_name: avg__flat_age_years
+  verbose_name: AVG(flat_age_years)
+  metric_type: avg
+  expression: AVG(flat_age_years)
+  description: Average flat age
+  d3format: '.1f'
+  warning_text: null

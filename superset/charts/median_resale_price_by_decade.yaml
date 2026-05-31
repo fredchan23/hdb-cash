@@ -1,0 +1,60 @@
+version: 1.0.0
+slice_name: Median Resale Price by Decade
+viz_type: echarts_timeseries_line
+description: Median resale price over each decade broken down by flat type.
+cache_timeout: null
+uuid: c3d4e5f6-a7b8-9c0d-1e2f-a3b4c5d6e7f8
+dataset_uuid: a1b2c3d4-e5f6-7a8b-9c0d-e1f2a3b4c5d6
+certified_by: null
+certification_details: null
+is_managed_externally: false
+params:
+  adhoc_filters: []
+  annotation_layers: []
+  color_scheme: supersetColors
+  comparison_type: values
+  forecastInterval: 0.8
+  forecastPeriods: 10
+  groupby:
+  - flat_type
+  legendMargin: null
+  legendOrientation: top
+  legendType: scroll
+  logAxis: false
+  metrics:
+  - aggregate: AVG
+    column:
+      column_name: median_resale_price
+      type: DOUBLE PRECISION
+    expressionType: SIMPLE
+    hasCustomLabel: true
+    label: Median Resale Price
+  minorSplitLine: false
+  opacity: 0.2
+  orderDesc: true
+  rich_tooltip: true
+  row_limit: 10000
+  seriesType: line
+  show_empty_columns: true
+  show_extra_controls: false
+  show_legend: true
+  stack: false
+  time_compare: []
+  time_range: No filter
+  tooltipTimeFormat: smart_date
+  truncateYAxis: false
+  viz_type: echarts_timeseries_line
+  x_axis: transaction_decade
+  x_axis_sort: ASC
+  x_axis_sort_asc: true
+  x_axis_title: Decade
+  x_axis_title_margin: 15
+  y_axis_bounds:
+  - null
+  - null
+  y_axis_format: SMART_NUMBER
+  y_axis_title: Median Resale Price (SGD)
+  y_axis_title_margin: 15
+  y_axis_title_position: Left
+  zoomable: false
+query_context: ''

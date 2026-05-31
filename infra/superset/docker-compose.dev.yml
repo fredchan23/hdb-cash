@@ -1,0 +1,64 @@
+# infra/superset/docker-compose.dev.yml
+# Local development stack — Superset + PostgreSQL metadata DB
+# BigQuery is accessed via ADC (Application Default Credentials)
+#
+# Usage:
+#   gcloud auth application-default login
+#   cp ~/.config/gcloud/application_default_credentials.json ./.adc.json
+#   docker compose -f infra/superset/docker-compose.dev.yml up -d
+#   open http://localhost:8088  (admin / changeme)
+#
+# To re-import dashboard YAML after editing superset/:
+#   docker compose -f infra/superset/docker-compose.dev.yml restart superset
+
+services:
+  superset:
+    build:
+      context: ../../           # repo root — needed to COPY superset/ defs
+      dockerfile: infra/superset/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8088:8080"
+    environment:
+      PORT: "8080"
+      SUPERSET_SECRET_KEY: "dev-only-secret-key-change-in-prod"
+      # Unix socket path used on Cloud Run; for local dev use plain TCP
+      SUPERSET_DATABASE_URL: "postgresql+pg8000://superset:superset@postgres:5432/superset"
+      # Leave OAuth blank for local dev — Superset falls back to DB auth
+      GOOGLE_CLIENT_ID: ""
+      GOOGLE_CLIENT_SECRET: ""
+      SESSION_COOKIE_SECURE: "false"
+      SUPERSET_ADMIN_USERNAME: "admin"
+      SUPERSET_ADMIN_PASSWORD: "changeme"
+      SUPERSET_ADMIN_EMAIL: "admin@localhost"
+      # Mount ADC for BigQuery access
+      GOOGLE_APPLICATION_CREDENTIALS: /app/.adc.json
+    volumes:
+      # Live-reload superset_config.py during development
+      - ../../infra/superset/superset_config.py:/app/pythonpath/superset_config.py:ro
+      # Live-reload dashboard YAML definitions
+      - ../../superset:/app/superset_defs:ro
+      # ADC credentials for BigQuery — create with:
+      #   cp ~/.config/gcloud/application_default_credentials.json ./.adc.json
+      - ../../.adc.json:/app/.adc.json:ro
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: superset
+      POSTGRES_USER: superset
+      POSTGRES_PASSWORD: superset
+    volumes:
+      - superset_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U superset"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  superset_pg_data:

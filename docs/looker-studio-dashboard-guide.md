@@ -1,7 +1,8 @@
-# Looker Studio Dashboard — Setup Guide
+# Apache Superset Dashboard — Setup Guide
 
-This guide walks through connecting Looker Studio to the `hdb-cash` BigQuery marts
-and building the core analytics dashboard. Intended for onboarding new team members.
+This guide covers running Apache Superset against the `hdb-cash` BigQuery marts.
+Charts and dashboards are defined as YAML in `superset/` and loaded via the CLI —
+no manual clicking required. Intended for onboarding new team members.
 
 ---
 
@@ -59,120 +60,108 @@ detailed drill-downs. Larger — filter by decade or town to keep queries fast.
 
 ---
 
-## Step 1 — Open Looker Studio
+## Step 1 — First-time GCP setup
 
-1. Go to [lookerstudio.google.com](https://lookerstudio.google.com).
-2. Click **Create → Report**.
+Run once to provision Cloud SQL, Artifact Registry, Secret Manager secrets, and
+the Cloud Run service:
 
----
+```bash
+bash infra/setup_superset_gcp.sh
+```
 
-## Step 2 — Add the summary data source
-
-1. In the connector panel, choose **BigQuery**.
-2. Authorize with the Google account that has access to `hdb-cash`.
-3. Select:
-   - **Project:** `hdb-cash`
-   - **Dataset:** `staging_dev_mart`
-   - **Table:** `mart_age_price_decade_summary`
-4. Click **Add → Add to Report**.
-
-> **Tip:** Change the `transaction_decade` field type to **Text** in the data source
-> schema editor. If left as a number, Looker Studio treats it as a continuous axis
-> and draws misleading interpolations between decades.
+Then populate the three OAuth/admin secrets with real values (see the script
+output for exact commands). The script creates placeholder values for:
+- `google-oauth-client-id` — from Google Cloud Console OAuth 2.0 client
+- `google-oauth-client-secret` — same
+- `superset-admin-password` — choose a strong password for the built-in admin
 
 ---
 
-## Step 3 — Add the regression inputs data source (optional)
+## Step 2 — Local development
 
-Repeat Step 2 but select `mart_age_price_regression_inputs`.
-Add a **default filter** (`transaction_decade = 2020`) to limit bytes scanned on
-every chart refresh.
+**Prerequisites:**
+- Docker Desktop (or Docker Engine) running
+- Copy your ADC credentials: `cp ~/.config/gcloud/application_default_credentials.json .adc.json`
 
----
+```bash
+# Start Superset + PostgreSQL metadata DB
+docker compose -f infra/superset/docker-compose.dev.yml up -d
 
-## Step 4 — Build core charts
+# Superset is available at http://localhost:8088
+# Login: admin / changeme
+```
 
-### 4a — Median price over decades (Line chart)
+Charts and dashboards are automatically imported on container startup from `superset/`.
+To re-import after editing YAML definitions:
 
-| Setting | Value |
-|---|---|
-| Data source | `mart_age_price_decade_summary` |
-| Chart type | Line chart |
-| Dimension | `transaction_decade` |
-| Metric | `median_resale_price` |
-| Breakdown dimension | `flat_type` (optional) |
+```bash
+# Option A — restart the container (re-runs import on startup)
+docker compose -f infra/superset/docker-compose.dev.yml restart superset
 
-### 4b — Price by flat age bucket (Bar chart)
-
-| Setting | Value |
-|---|---|
-| Data source | `mart_age_price_decade_summary` |
-| Chart type | Grouped bar chart |
-| Dimension | `flat_age_bucket` |
-| Metric | `avg_resale_price` |
-| Breakdown dimension | `flat_type` |
-
-Sort `flat_age_bucket` manually or prefix buckets with a numeric sort key so they
-appear in age order (the macro already outputs them in order).
-
-### 4c — Price per sqm heatmap (Pivot table)
-
-| Setting | Value |
-|---|---|
-| Data source | `mart_age_price_decade_summary` |
-| Chart type | Pivot table with heatmap |
-| Row dimension | `transaction_decade` |
-| Column dimension | `flat_age_bucket` |
-| Metric | `median_price_per_sqm` |
-
-### 4d — Transaction volume scorecard
-
-| Setting | Value |
-|---|---|
-| Data source | `mart_age_price_decade_summary` |
-| Chart type | Scorecard |
-| Metric | `SUM(transaction_count)` |
-
-### 4e — Flat age vs. price scatter plot
-
-| Setting | Value |
-|---|---|
-| Data source | `mart_age_price_regression_inputs` |
-| Chart type | Scatter chart |
-| X-axis | `flat_age_years` |
-| Y-axis | `resale_price` |
-| Breakdown dimension | `flat_type` |
-
-Apply a **report-level filter** (`transaction_decade = 2020`) to keep this chart
-responsive.
+# Option B — import directly against the running container via REST API
+bash superset/import.sh
+```
 
 ---
 
-## Step 5 — Add interactive filter controls
+## Step 3 — Deploy to Cloud Run
 
-Add the following **Filter controls** to the report header so viewers can slice all
-charts simultaneously:
+```bash
+# Build, push, and deploy (uses current ADC for gcloud)
+bash infra/deploy_superset.sh
+```
 
-| Control | Field | Type |
+After the first deploy, the script prints the Cloud Run URL. Add that URL's
+OAuth redirect to your Google Cloud Console OAuth 2.0 client:
+
+```
+https://<cloud-run-url>/oauth-authorized/google
+```
+
+Then re-deploy once to pick up the correct redirect URI in the config.
+
+---
+
+## Step 4 — Dashboard overview
+
+The dashboard **HDB Resale Analysis** (`/dashboard/hdb-resale-analysis`) contains
+five charts loaded automatically on startup:
+
+| Chart | Viz type | Dataset |
 |---|---|---|
-| Flat type | `flat_type` | Drop-down list |
-| Decade | `transaction_decade` | Drop-down list |
-| Town | `town` (regression source) | Drop-down list |
+| Total Transaction Volume | Big number | `mart_age_price_decade_summary` |
+| Median Resale Price by Decade | Line (echarts) | `mart_age_price_decade_summary` |
+| Avg Resale Price by Flat Age Bucket | Bar (echarts) | `mart_age_price_decade_summary` |
+| Median Price per sqm Heatmap | Pivot table | `mart_age_price_decade_summary` |
+| Flat Age vs Resale Price Scatter | Scatter (echarts) | `mart_age_price_regression_inputs` |
 
-Set **"Apply filter to all compatible data sources"** on each control so both mart
-tables respond.
+Two native filters sit at the top: **Flat Type** and **Decade**, applying to all
+compatible charts simultaneously.
 
 ---
 
-## Step 6 — Performance tips
+## Step 5 — Modifying charts
 
-- **Extract data:** For charts using `mart_age_price_regression_inputs`, enable
-  *Data → Extract data* caching. Looker Studio caches a snapshot so BigQuery is
-  not queried on every page load. Refresh the extract after each `dbt run`.
-- **Date range control:** Add a date range control bound to `transaction_month` on
-  the regression inputs source to let viewers focus on specific periods.
-- **Billing:** BigQuery charges per bytes scanned. The summary mart is tiny (~KB).
-  The regression inputs mart is larger; always pre-filter by decade or town.
+**Recommended workflow** (chart as code):
+
+1. Edit the relevant YAML file in `superset/charts/` or `superset/dashboards/`.
+2. Re-import: `bash superset/import.sh` (local) or push to `main` (CI/CD auto-deploys).
+
+**Alternative — UI first, then export:**
+
+1. Edit the chart in the Superset Explore view.
+2. Export: *Dashboards → ··· → Export* (downloads a ZIP).
+3. Unzip and replace the YAML files in `superset/`.
+4. Commit the updated YAML files.
+
+---
+
+## Step 6 — CI/CD
+
+`.github/workflows/superset-deploy.yml` triggers automatically on any push to
+`main` that touches `infra/superset/**` or `superset/**`. It uses the same WIF
+service account as the dbt workflow (`WIF_PROVIDER` / `WIF_SERVICE_ACCOUNT`
+secrets). No additional GitHub secrets are needed.
 
 ---
 
@@ -180,11 +169,13 @@ tables respond.
 
 | Issue | Fix |
 |---|---|
-| `staging_dev_mart` dataset not visible | Confirm the signed-in account has `roles/bigquery.dataViewer` on the `hdb-cash` project |
+| `staging_dev_mart` not visible in Explore | Confirm the Cloud Run SA `superset-runner@hdb-cash.iam.gserviceaccount.com` has `roles/bigquery.dataViewer` |
 | Charts show no data | Run `dbt run` (or `dbt run --full-refresh`) to materialise the marts |
-| `transaction_decade` axis shows decimal points | Change field type to **Text** in the data source schema editor |
-| Scatter plot times out | Add a `transaction_decade` filter; avoid querying all 35+ years at once |
-| `flat_age_bucket` sorts alphabetically | Prefix bucket labels with a number (e.g. `"1 – 0-10 yrs"`) or use a calculated field for sort order |
+| Import fails with HTTP 400 | Check that `metadata.yaml` is present in `superset/` and the `version: 1.0.0` field is set in all YAML files |
+| Scatter plot times out | The default filter pre-selects `transaction_decade = 2020`; remove it only after adding a native filter to restrict rows |
+| Google OAuth redirect error | Ensure the Cloud Run URL's `/oauth-authorized/google` path is listed as an authorised redirect URI in your Google OAuth 2.0 client |
+| Cold start takes > 60s | Set `min-instances=1` in `infra/deploy_superset.sh` and re-deploy (~$15/month fixed cost) |
+| `SESSION_COOKIE_SECURE` errors on `localhost` | The dev compose sets `SESSION_COOKIE_SECURE=false`; do not set it to `true` for local HTTP |
 
 ---
 
@@ -193,4 +184,5 @@ tables respond.
 - [AGENTS.md](../AGENTS.md) — project overview and BigQuery layout
 - [dbt-hdb skill](../.github/skills/dbt-hdb/SKILL.md) — how to run and validate the pipeline
 - [mart models](../dbt/models/mart/) — SQL source for both mart tables
-- [Looker Studio Help Centre](https://support.google.com/looker-studio)
+- [superset/ folder](../superset/) — chart and dashboard YAML definitions
+- [Apache Superset docs](https://superset.apache.org/docs/intro/)

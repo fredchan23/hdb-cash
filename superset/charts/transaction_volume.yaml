@@ -1,0 +1,30 @@
+version: 1.0.0
+slice_name: Total Transaction Volume
+viz_type: big_number_total
+description: Total HDB resale transactions across all decades and flat types.
+cache_timeout: null
+uuid: f6a7b8c9-d0e1-2f3a-4b5c-d6e7f8a9b0c1
+dataset_uuid: a1b2c3d4-e5f6-7a8b-9c0d-e1f2a3b4c5d6
+certified_by: null
+certification_details: null
+is_managed_externally: false
+params:
+  adhoc_filters: []
+  compareLag: 0
+  comparePrefix: ▲
+  forceDateResult: false
+  header_font_size: 0.4
+  metric:
+    aggregate: SUM
+    column:
+      column_name: transaction_count
+      type: INT64
+    expressionType: SIMPLE
+    hasCustomLabel: true
+    label: Total Transactions
+  subheader: HDB resale transactions (all decades)
+  subheader_font_size: 0.15
+  time_range: No filter
+  viz_type: big_number_total
+  y_axis_format: SMART_NUMBER
+query_context: ''

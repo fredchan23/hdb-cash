@@ -1,0 +1,158 @@
+version: 1.0.0
+dashboard_title: HDB Resale Analysis
+description: How flat age affects HDB resale price across decades (1990–present).
+slug: hdb-resale-analysis
+uuid: b8c9d0e1-f2a3-4b5c-6d7e-f8a9b0c1d2e3
+published: true
+certified_by: null
+certification_details: null
+is_managed_externally: false
+css: ''
+
+# Dashboard grid layout.
+# Position CHART node meta.uuid must match the chart uuid in superset/charts/.
+# Widths sum to 12 per row (Superset Bootstrap grid).
+position:
+  DASHBOARD_VERSION_KEY: v2
+  ROOT_ID:
+    children:
+    - GRID_ID
+    id: ROOT_ID
+    type: ROOT
+  GRID_ID:
+    children:
+    - ROW-row1
+    - ROW-row2
+    - ROW-row3
+    id: GRID_ID
+    type: GRID
+  # Row 1 — scorecard + line chart
+  ROW-row1:
+    children:
+    - CHART-vol
+    - CHART-line
+    id: ROW-row1
+    meta:
+      background: BACKGROUND_TRANSPARENT
+    type: ROW
+  CHART-vol:
+    children: []
+    id: CHART-vol
+    meta:
+      chartId: null
+      height: 36
+      sliceName: Total Transaction Volume
+      uuid: f6a7b8c9-d0e1-2f3a-4b5c-d6e7f8a9b0c1
+      width: 4
+    type: CHART
+  CHART-line:
+    children: []
+    id: CHART-line
+    meta:
+      chartId: null
+      height: 36
+      sliceName: Median Resale Price by Decade
+      uuid: c3d4e5f6-a7b8-9c0d-1e2f-a3b4c5d6e7f8
+      width: 8
+    type: CHART
+  # Row 2 — bar chart + heatmap pivot
+  ROW-row2:
+    children:
+    - CHART-bar
+    - CHART-pivot
+    id: ROW-row2
+    meta:
+      background: BACKGROUND_TRANSPARENT
+    type: ROW
+  CHART-bar:
+    children: []
+    id: CHART-bar
+    meta:
+      chartId: null
+      height: 50
+      sliceName: Avg Resale Price by Flat Age Bucket
+      uuid: d4e5f6a7-b8c9-0d1e-2f3a-b4c5d6e7f8a9
+      width: 6
+    type: CHART
+  CHART-pivot:
+    children: []
+    id: CHART-pivot
+    meta:
+      chartId: null
+      height: 50
+      sliceName: Median Price per sqm Heatmap
+      uuid: e5f6a7b8-c9d0-1e2f-3a4b-c5d6e7f8a9b0
+      width: 6
+    type: CHART
+  # Row 3 — full-width scatter
+  ROW-row3:
+    children:
+    - CHART-scatter
+    id: ROW-row3
+    meta:
+      background: BACKGROUND_TRANSPARENT
+    type: ROW
+  CHART-scatter:
+    children: []
+    id: CHART-scatter
+    meta:
+      chartId: null
+      height: 50
+      sliceName: Flat Age vs Resale Price Scatter
+      uuid: a7b8c9d0-e1f2-3a4b-5c6d-e7f8a9b0c1d2
+      width: 12
+    type: CHART
+
+metadata:
+  show_native_filters: true
+  native_filter_configuration:
+  - filterType: filter_select
+    id: NATIVE_FILTER-flat_type
+    name: Flat Type
+    targets:
+    - datasetUuid: a1b2c3d4-e5f6-7a8b-9c0d-e1f2a3b4c5d6
+      column:
+        name: flat_type
+    - datasetUuid: b2c3d4e5-f6a7-8b9c-0d1e-f2a3b4c5d6e7
+      column:
+        name: flat_type
+    controlValues:
+      multiSelect: true
+      defaultToFirstItem: false
+      inverseSelection: false
+      searchAllOptions: false
+      sortAscending: true
+    defaultDataMask:
+      filterState:
+        value: null
+    scope:
+      rootPath:
+      - ROOT_ID
+      excluded: []
+    type: NATIVE_FILTER
+    cascadeParentIds: []
+  - filterType: filter_select
+    id: NATIVE_FILTER-decade
+    name: Decade
+    targets:
+    - datasetUuid: a1b2c3d4-e5f6-7a8b-9c0d-e1f2a3b4c5d6
+      column:
+        name: transaction_decade
+    - datasetUuid: b2c3d4e5-f6a7-8b9c-0d1e-f2a3b4c5d6e7
+      column:
+        name: transaction_decade
+    controlValues:
+      multiSelect: false
+      defaultToFirstItem: false
+      inverseSelection: false
+      searchAllOptions: false
+      sortAscending: true
+    defaultDataMask:
+      filterState:
+        value: null
+    scope:
+      rootPath:
+      - ROOT_ID
+      excluded: []
+    type: NATIVE_FILTER
+    cascadeParentIds: []
