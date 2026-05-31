@@ -1,9 +1,8 @@
 version: 1.0.0
 slice_name: Flat Age vs Resale Price Scatter
-viz_type: echarts_scatter
-description: Scatter plot of average flat age vs average resale price, coloured by
-  flat type. Filtered to 2020 decade by default; adjust the filter to explore other
-  periods.
+viz_type: echarts_timeseries_scatter
+description: Avg resale price by flat age (years), coloured by flat type. Filtered
+  to 2020 decade by default; adjust the filter to explore other periods.
 cache_timeout: null
 uuid: a7b8c9d0-e1f2-3a4b-5c6d-e7f8a9b0c1d2
 dataset_uuid: b2c3d4e5-f6a7-8b9c-0d1e-f2a3b4c5d6e7
@@ -21,45 +20,52 @@ params:
     operator: ==
     operatorId: EQUALS
     subject: transaction_decade
+  annotation_layers: []
   color_scheme: supersetColors
+  comparison_type: values
+  forecastInterval: 0.8
+  forecastPeriods: 10
   groupby:
   - flat_type
-  labelType: key
   legendMargin: null
   legendOrientation: top
   legendType: scroll
-  logXAxis: false
-  logYAxis: false
+  logAxis: false
   markerSize: 6
   metrics:
   - aggregate: AVG
     column:
       column_name: resale_price
-      type: DOUBLE PRECISION
+      type: FLOAT64
     expressionType: SIMPLE
     hasCustomLabel: true
     label: Avg Resale Price
+  minorSplitLine: false
+  opacity: 0.2
   orderDesc: true
   rich_tooltip: true
   row_limit: 10000
+  seriesType: scatter
+  show_empty_columns: true
+  show_extra_controls: false
   show_legend: true
+  stack: false
+  time_compare: []
   time_range: No filter
-  viz_type: echarts_scatter
-  x:
-    aggregate: AVG
-    column:
-      column_name: flat_age_years
-      type: DOUBLE PRECISION
-    expressionType: SIMPLE
-    hasCustomLabel: true
-    label: Avg Flat Age (years)
-  x_axis_label: Avg Flat Age (years)
+  tooltipTimeFormat: smart_date
+  truncateYAxis: false
+  viz_type: echarts_timeseries_scatter
+  x_axis: flat_age_bucket
+  x_axis_label: Flat Age Bucket
+  x_axis_sort: ASC
+  x_axis_sort_asc: true
   x_axis_title_margin: 15
-  xy_tooltips: true
   y_axis_bounds:
   - null
   - null
   y_axis_format: SMART_NUMBER
   y_axis_label: Avg Resale Price (SGD)
   y_axis_title_margin: 15
+  y_axis_title_position: Left
+  zoomable: false
 query_context: ''

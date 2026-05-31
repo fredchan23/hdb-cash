@@ -1,6 +1,6 @@
 version: 1.0.0
 slice_name: Avg Resale Price by Flat Age Bucket
-viz_type: echarts_bar
+viz_type: echarts_timeseries_bar
 description: Average resale price per flat age bracket, broken down by flat type.
 cache_timeout: null
 uuid: d4e5f6a7-b8c9-0d1e-2f3a-b4c5d6e7f8a9
@@ -10,39 +10,51 @@ certification_details: null
 is_managed_externally: false
 params:
   adhoc_filters: []
-  bar_stacked: false
-  bottom_margin: auto
+  annotation_layers: []
   color_scheme: supersetColors
+  comparison_type: values
+  forecastInterval: 0.8
+  forecastPeriods: 10
   groupby:
   - flat_type
   legendMargin: null
   legendOrientation: top
   legendType: scroll
+  logAxis: false
   metrics:
   - aggregate: AVG
     column:
       column_name: avg_resale_price
-      type: DOUBLE PRECISION
+      type: FLOAT64
     expressionType: SIMPLE
     hasCustomLabel: true
     label: Avg Resale Price
-  order_bars: false
+  minorSplitLine: false
+  opacity: 0.2
   orderDesc: true
-  orientation: vertical
   rich_tooltip: true
   row_limit: 10000
-  show_bar_value: false
+  seriesType: bar
+  show_empty_columns: true
+  show_extra_controls: false
   show_legend: true
+  stack: false
+  time_compare: []
   time_range: No filter
-  viz_type: echarts_bar
+  tooltipTimeFormat: smart_date
+  truncateYAxis: false
+  viz_type: echarts_timeseries_bar
   x_axis: flat_age_bucket
   x_axis_label: Flat Age Bucket
+  x_axis_sort: ASC
+  x_axis_sort_asc: true
   x_axis_title_margin: 15
-  x_ticks_layout: auto
   y_axis_bounds:
   - null
   - null
   y_axis_format: SMART_NUMBER
   y_axis_label: Avg Resale Price (SGD)
   y_axis_title_margin: 15
+  y_axis_title_position: Left
+  zoomable: false
 query_context: ''
